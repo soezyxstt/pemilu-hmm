@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
-import { Prince, Senator } from "@prisma/client";
+import type { Prince, Senator } from "@prisma/client";
 import { TRPCClientError } from "@trpc/client";
 
 export const voteRouter = createTRPCRouter({

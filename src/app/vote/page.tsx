@@ -49,7 +49,7 @@ export default async function Vote({
             </Title>
             <div className="flex gap-20">
               {princes.map((p, index) => (
-                <div className="flex flex-col gap-6">
+                <div className="flex flex-col gap-6" key={p.name}>
                   <Card name={p.name} nomor={index + 1} foto={p.foto} />
                   <LinkButton
                     content={`Pilih ${p.nickName}`}
@@ -67,7 +67,7 @@ export default async function Vote({
             </Title>
             <div className="flex gap-20">
               {senators.map((s, index) => (
-                <div className="flex flex-col gap-6">
+                <div className="flex flex-col gap-6" key={s.name}>
                   <Card name={s.name} nomor={index + 1} foto={s.foto} />
                   <LinkButton
                     content={`Pilih ${s.nickName}`}
