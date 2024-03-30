@@ -1,16 +1,50 @@
 "use client";
 
+import { signIn } from "next-auth/react";
 import Image from "next/image";
+import { useRouter } from 'next/navigation';
 import { useState, type HTMLAttributes } from "react";
+import { Toaster, toast } from "sonner";
 
 export default function Home() {
   const [uname, setUname] = useState("");
   const [nim, setNim] = useState("");
+  const router = useRouter();
 
   return (
     <main className="z-10 flex items-center justify-center px-[7.5vw]">
+      <Toaster richColors />
       <div className="flex h-full w-1/2 items-center justify-center">
-        <div className="flex h-[70vh] w-[30vw] flex-col items-center justify-center gap-8 rounded-[3rem] bg-white px-14 py-12">
+        <form
+          className="flex h-[70vh] w-[30vw] flex-col items-center justify-center gap-8 rounded-[3rem] bg-white px-14 py-12"
+          onSubmit={async (e) => {
+            e.preventDefault();
+            const res = await signIn("credentials", {
+              name: uname,
+              nim: nim,
+              callbackUrl: "/vote",
+              redirect: false,
+            });
+
+            if (res?.error) {
+              toast.error(res.error, {
+                duration: 2000,
+                position: "top-right",
+              });
+            }
+
+            if (res?.ok) {
+              toast.success("Berhasil masuk!", {
+                duration: 2000,
+                position: "top-right",
+              });
+              void router.push("/vote");
+            }
+
+            setUname("");
+            setNim("");
+          }}
+        >
           <Image
             src="/logo-hmm.png"
             alt="logo"
@@ -21,17 +55,24 @@ export default function Home() {
           <Input
             placeholder="NAMA LENGKAP"
             value={uname}
+            name='name'
             onChange={(e) => {
               setUname(e.currentTarget.value.toUpperCase());
             }}
           />
-          <Input placeholder="NIM" value={nim} type='number' onChange={(e) => {
-            setNim(e.currentTarget.value);
-          }} />
+          <Input
+            placeholder="NIM"
+            value={nim}
+            name='nim'
+            type="number"
+            onChange={(e) => {
+              setNim(e.currentTarget.value);
+            }}
+          />
           <button className="flex w-full justify-center rounded-md bg-navy py-2.5 text-white">
             VOTE
           </button>
-        </div>
+        </form>
       </div>
       <div className="relative flex h-full w-1/2 items-center justify-center">
         <Image
@@ -55,16 +96,19 @@ const Input = ({
   placeholder,
   value,
   type = "text",
+  name,
   ...props
 }: {
   placeholder: string;
-    value: string;
-  type?: string;
+  value: string;
+    type?: string;
+    name: string;
 } & HTMLAttributes<HTMLInputElement>) => {
   return (
     <input
       type={type}
       value={value}
+      name={name}
       className="w-full rounded-md border border-navy/80 px-4 py-2 shadow-md placeholder:text-navy/50"
       placeholder={placeholder}
       {...props}

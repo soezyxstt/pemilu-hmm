@@ -1,8 +1,11 @@
 import Image from "next/image";
-import Link from "next/link";
-import { bungee, leagueSpartan, quicksand, rubikMonoOne } from "~/styles/font";
+import Link, { type LinkProps } from "next/link";
+import { redirect } from "next/navigation";
+import { toast, Toaster } from "sonner";
+import { bungee, quicksand, rubikMonoOne } from "~/styles/font";
+import { api } from "~/trpc/server";
 
-export default function Vote({
+export default async function Vote({
   searchParams: { prince, senator, page },
 }: {
   searchParams: { [key: string]: string | string[] | undefined };
@@ -15,8 +18,29 @@ export default function Vote({
     { name: "Nika Avivatus S", foto: "/nika.png", nickName: "Nika" },
     { name: "M Dihya Dailamy", foto: "/dihya.png", nickName: "Dihya" },
   ];
+
+  const vote = async () => {
+    "use server";
+
+    const res = await api.vote.vote({
+      prince: prince as string,
+      senator: senator as string,
+    });
+
+    if (!res) {
+      toast.error("Gagal memilih!", {
+        duration: 2000,
+        position: "top-right",
+      });
+      return;
+    }
+
+    redirect(`/vote?prince=${prince}&senator=${senator}&page=4`);
+  };
+
   return (
     <main className="z-10 flex items-center justify-center py-14">
+      <Toaster richColors />
       <div className="h-full *:flex *:flex-col *:items-center *:gap-14 *:text-white">
         {(page === "1" || page === undefined) && (
           <div>
@@ -29,7 +53,7 @@ export default function Vote({
                   <Card name={p.name} nomor={index + 1} foto={p.foto} />
                   <LinkButton
                     content={`Pilih ${p.nickName}`}
-                    link={`/vote?prince=${index + 1}&page=2`}
+                    href={`/vote?prince=${index + 1}&page=2`}
                   />
                 </div>
               ))}
@@ -47,7 +71,7 @@ export default function Vote({
                   <Card name={s.name} nomor={index + 1} foto={s.foto} />
                   <LinkButton
                     content={`Pilih ${s.nickName}`}
-                    link={`/vote?prince=${prince}&senator=${index + 1}&page=3`}
+                    href={`/vote?prince=${prince}&senator=${index + 1}&page=3`}
                   />
                 </div>
               ))}
@@ -59,7 +83,7 @@ export default function Vote({
             <Title className="text-3xl [text-shadow:1px_2px_#061b3b]">
               Apakah Anda yakin dengan pilihan Anda?
             </Title>
-            <div className="flex flex-col items-center gap-6">
+            <form className="flex flex-col items-center gap-6" action={vote}>
               <div className="flex gap-20">
                 <Card
                   name={princes[parseInt(prince as string) - 1]?.name ?? ""}
@@ -72,12 +96,13 @@ export default function Vote({
                   foto={senators[parseInt(senator as string) - 1]?.foto ?? ""}
                 />
               </div>
-              <LinkButton
-                content="Submit"
-                link={`/vote?prince=${prince}&senator=${senator}&page=4`}
-                className="w-full"
-              />
-            </div>
+              <button
+                type="submit"
+                className={` w-full ${quicksand.className} rounded bg-blue-800 py-2 text-center font-semibold transition-colors hover:bg-blue-900`}
+              >
+                SUBMIT
+              </button>
+            </form>
           </div>
         )}
         {page === "4" && (
@@ -86,14 +111,14 @@ export default function Vote({
               {" "}
               Terima kasih telah memilih!
             </Title>
-            <Title className='text-center flex justify-center h-[20vh] items-center text-navy text-2xl [text-shadow:1px_1px_#FFFFFF]'>
+            <Title className="flex h-[20vh] items-center justify-center text-center text-2xl text-navy [text-shadow:1px_1px_#FFFFFF]">
               Demikian suara Anda telah tercatat.
               <br />
               Yellboys!
             </Title>
             <LinkButton
               content="Kembali ke halaman utama"
-              link="/vote"
+              href="/"
               className="w-72"
             />
           </div>
@@ -105,16 +130,15 @@ export default function Vote({
 
 const LinkButton = ({
   content,
-  link,
+  href,
   className,
 }: {
   content: string;
-  link: string;
   className?: string;
-}) => {
+} & LinkProps) => {
   return (
     <Link
-      href={link}
+      href={href}
       className={`${quicksand.className} rounded bg-blue-800 py-2 text-center font-semibold transition-colors hover:bg-blue-900 ${className}`}
     >
       {content.toUpperCase()}

@@ -1,13 +1,11 @@
-import { PrismaAdapter } from "@auth/prisma-adapter";
+import { type Role } from "@prisma/client";
+import { TRPCError } from "@trpc/server";
 import {
   getServerSession,
   type DefaultSession,
   type NextAuthOptions,
 } from "next-auth";
-import { type Adapter } from "next-auth/adapters";
-import DiscordProvider from "next-auth/providers/discord";
-
-import { env } from "~/env";
+import CredentialsProvider from "next-auth/providers/credentials";
 import { db } from "~/server/db";
 
 /**
@@ -20,15 +18,16 @@ declare module "next-auth" {
   interface Session extends DefaultSession {
     user: {
       id: string;
-      // ...other properties
-      // role: UserRole;
+      role: Role;
+      nim: string;
     } & DefaultSession["user"];
   }
 
-  // interface User {
-  //   // ...other properties
-  //   // role: UserRole;
-  // }
+  interface User {
+    id: string;
+    role: Role;
+    nim: string;
+  }
 }
 
 /**
@@ -37,30 +36,72 @@ declare module "next-auth" {
  * @see https://next-auth.js.org/configuration/options
  */
 export const authOptions: NextAuthOptions = {
+  session: {
+    strategy: "jwt",
+    updateAge: 0,
+    maxAge: 60 * 60 * 12,
+  },
+  jwt: {
+    maxAge: 60 * 60 * 12,
+  },
   callbacks: {
-    session: ({ session, user }) => ({
+    session: ({ session, token }) => ({
       ...session,
       user: {
         ...session.user,
-        id: user.id,
+        id: token.id,
+        role: token.role,
+        nim: token.nim,
+        name: token.name,
       },
     }),
+    jwt: ({ token, user }) => {
+      if (user) {
+        token.id = user.id;
+        token.role = user.role;
+        token.nim = user.nim;
+        token.name = user.name;
+      }
+      return token;
+    },
   },
-  adapter: PrismaAdapter(db) as Adapter,
   providers: [
-    DiscordProvider({
-      clientId: env.DISCORD_CLIENT_ID,
-      clientSecret: env.DISCORD_CLIENT_SECRET,
+    CredentialsProvider({
+      name: "Credentials",
+      credentials: {
+        name: { label: "Name", type: "text" },
+        nim: { label: "NIM", type: "number" },
+      },
+      async authorize(credentials, _req) {
+        if (!credentials) {
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Credentials not found",
+          });
+        }
+
+        const user = await db.user.findFirst({
+          where: {
+            name: credentials?.name.toLowerCase(),
+            nim: credentials?.nim,
+          },
+        });
+
+        if (!user) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "User not found",
+          });
+        }
+
+        return {
+          id: user.id,
+          role: user.role,
+          nim: user.nim,
+          name: user.name,
+        };
+      },
     }),
-    /**
-     * ...add more providers here.
-     *
-     * Most other providers require a bit more work than the Discord provider. For example, the
-     * GitHub provider requires you to add the `refresh_token_expires_in` field to the Account
-     * model. Refer to the NextAuth.js docs for the provider you want to use. Example:
-     *
-     * @see https://next-auth.js.org/providers/github
-     */
   ],
 };
 
