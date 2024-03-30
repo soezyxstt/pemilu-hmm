@@ -99,21 +99,21 @@ export default function Vote({
                 void router.push("/vote?page=4");
 
                 const rTO = setTimeout(() => {
-                  signOut();
+                  void signOut();
                 }, 3000);
                 timeOut.push(rTO);
               }}
             >
               <div className="flex gap-20">
                 <Card
-                  name={princes[parseInt(prince as string) - 1]?.name ?? ""}
-                  nomor={parseInt(prince as string)}
-                  foto={princes[parseInt(prince as string) - 1]?.foto ?? ""}
+                  name={princes[parseInt(prince!) - 1]?.name!}
+                  nomor={parseInt(prince!)}
+                  foto={princes[parseInt(prince!) - 1]?.foto!}
                 />
                 <Card
-                  name={senators[parseInt(senator as string) - 1]?.name ?? ""}
-                  nomor={parseInt(senator as string)}
-                  foto={senators[parseInt(senator as string) - 1]?.foto ?? ""}
+                  name={senators[parseInt(senator!) - 1]?.name!}
+                  nomor={parseInt(senator!)}
+                  foto={senators[parseInt(senator!) - 1]?.foto!}
                 />
               </div>
               <button
