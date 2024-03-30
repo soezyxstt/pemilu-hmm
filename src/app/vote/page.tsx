@@ -106,14 +106,14 @@ export default function Vote({
             >
               <div className="flex gap-20">
                 <Card
-                  name={princes[parseInt(prince!) - 1]?.name!}
+                  name={princes[parseInt(prince!) - 1]?.name ?? ""}
                   nomor={parseInt(prince!)}
-                  foto={princes[parseInt(prince!) - 1]?.foto!}
+                  foto={princes[parseInt(prince!) - 1]?.foto ?? ""}
                 />
                 <Card
-                  name={senators[parseInt(senator!) - 1]?.name!}
+                  name={senators[parseInt(senator!) - 1]?.name ?? ""}
                   nomor={parseInt(senator!)}
-                  foto={senators[parseInt(senator!) - 1]?.foto!}
+                  foto={senators[parseInt(senator!) - 1]?.foto ?? ""}
                 />
               </div>
               <button
