@@ -1,7 +1,6 @@
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import type { Prince, Senator } from "@prisma/client";
-import { TRPCClientError } from "@trpc/client";
 
 export const voteRouter = createTRPCRouter({
   vote: protectedProcedure
@@ -23,8 +22,19 @@ export const voteRouter = createTRPCRouter({
       const p: Prince = prince === "1" ? "faris" : "wilnat";
       const s: Senator = senator === "1" ? "nika" : "dihya";
 
+      const user = await db.user.findUnique({
+        where: {
+          id,
+        },
+        include: {
+          vote: true,
+        }
+      });
+
+      if (user?.vote) return {error: "Anda sudah memilih!"};
+
       try {
-        const user = await db.vote.create({
+        const vote = await db.vote.create({
           data: {
             prince: p,
             senator: s,
@@ -36,11 +46,14 @@ export const voteRouter = createTRPCRouter({
           },
         });
 
-        if (!user) throw new TRPCClientError("Failed to vote");
+        if (!vote) return {error: "Gagal memilih!"};
 
-        return user;
+        return {
+          error: null,
+          ...vote,
+        };
       } catch (error) {
-        throw new TRPCClientError(error as string);
+        return {error: "Gagal memilih!"};
       }
     }),
 });

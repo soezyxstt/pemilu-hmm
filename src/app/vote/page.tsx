@@ -1,14 +1,18 @@
+"use client";
+
 import Image from "next/image";
 import Link, { type LinkProps } from "next/link";
-import { redirect } from "next/navigation";
 import { toast, Toaster } from "sonner";
 import { bungee, quicksand, rubikMonoOne } from "~/styles/font";
-import { api } from "~/trpc/server";
+import { vote } from "../_action/action";
+import { useRouter } from "next/navigation";
+import { signOut, useSession } from "next-auth/react";
+import { useState } from "react";
 
-export default async function Vote({
+export default function Vote({
   searchParams: { prince, senator, page },
 }: {
-  searchParams: { [key: string]: string | string[] | undefined };
+  searchParams: { [key: string]: string };
 }) {
   const princes = [
     { name: "Faris Ahmad Nashif", foto: "/faris.png", nickName: "Faris" },
@@ -18,25 +22,15 @@ export default async function Vote({
     { name: "Nika Avivatus S", foto: "/nika.png", nickName: "Nika" },
     { name: "M Dihya Dailamy", foto: "/dihya.png", nickName: "Dihya" },
   ];
+  const router = useRouter();
+  const timeOut: ReturnType<typeof setTimeout>[] = [];
+  const [loading, setLoading] = useState(false);
+  const { data } = useSession();
 
-  const vote = async () => {
-    "use server";
-
-    const res = await api.vote.vote({
-      prince: prince as string,
-      senator: senator as string,
-    });
-
-    if (!res) {
-      toast.error("Gagal memilih!", {
-        duration: 2000,
-        position: "top-right",
-      });
-      return;
-    }
-
-    redirect(`/vote?prince=${prince}&senator=${senator}&page=4`);
-  };
+  if (!data) {
+    void router.push("/");
+    return null;
+  }
 
   return (
     <main className="z-10 flex items-center justify-center py-14">
@@ -83,7 +77,33 @@ export default async function Vote({
             <Title className="text-3xl [text-shadow:1px_2px_#061b3b]">
               Apakah Anda yakin dengan pilihan Anda?
             </Title>
-            <form className="flex flex-col items-center gap-6" action={vote}>
+            <form
+              className="flex flex-col items-center gap-6"
+              action={async () => {
+                setLoading(true);
+                const res = await vote({
+                  prince: prince ?? "",
+                  senator: senator ?? "",
+                });
+
+                setLoading(false);
+
+                if (res?.error) {
+                  toast.error(res.error, {
+                    duration: 2000,
+                    position: "top-right",
+                  });
+                  return;
+                }
+
+                void router.push("/vote?page=4");
+
+                const rTO = setTimeout(() => {
+                  signOut();
+                }, 3000);
+                timeOut.push(rTO);
+              }}
+            >
               <div className="flex gap-20">
                 <Card
                   name={princes[parseInt(prince as string) - 1]?.name ?? ""}
@@ -98,9 +118,10 @@ export default async function Vote({
               </div>
               <button
                 type="submit"
-                className={` w-full ${quicksand.className} rounded bg-blue-800 py-2 text-center font-semibold transition-colors hover:bg-blue-900`}
+                disabled={loading}
+                className={` w-full ${quicksand.className} rounded bg-blue-800 py-2 text-center font-semibold transition-colors hover:bg-blue-900 ${loading ? "cursor-not-allowed" : ""} disabled:opacity-80`}
               >
-                SUBMIT
+                {loading ? "LOADING..." : "YAKIN!"}
               </button>
             </form>
           </div>
@@ -116,11 +137,15 @@ export default async function Vote({
               <br />
               Yellboys!
             </Title>
-            <LinkButton
-              content="Kembali ke halaman utama"
-              href="/"
-              className="w-72"
-            />
+            <button
+              className={` w-72 ${quicksand.className} rounded bg-blue-800 py-2 text-center font-semibold transition-colors hover:bg-blue-900`}
+              onClick={() => {
+                void router.push("/");
+                timeOut[0] && clearTimeout(timeOut[0]);
+              }}
+            >
+              Kembali ke Halaman Utama
+            </button>
           </div>
         )}
       </div>

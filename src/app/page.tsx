@@ -9,6 +9,7 @@ import { Toaster, toast } from "sonner";
 export default function Home() {
   const [uname, setUname] = useState("");
   const [nim, setNim] = useState("");
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
 
   return (
@@ -19,6 +20,7 @@ export default function Home() {
           className="flex h-[70vh] w-[30vw] flex-col items-center justify-center gap-8 rounded-[3rem] bg-white px-14 py-12"
           onSubmit={async (e) => {
             e.preventDefault();
+            setLoading(true);
             const res = await signIn("credentials", {
               name: uname,
               nim: nim,
@@ -41,6 +43,7 @@ export default function Home() {
               void router.push("/vote");
             }
 
+            setLoading(false);
             setUname("");
             setNim("");
           }}
@@ -69,8 +72,8 @@ export default function Home() {
               setNim(e.currentTarget.value);
             }}
           />
-          <button className="flex w-full justify-center rounded-md bg-navy py-2.5 text-white">
-            VOTE
+          <button disabled={loading} className="flex w-full justify-center rounded-md bg-navy py-2.5 text-white disabled:cursor-not-allowed">
+            {loading ? "LOADING..." : "VOTE"}
           </button>
         </form>
       </div>
