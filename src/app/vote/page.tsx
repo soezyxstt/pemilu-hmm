@@ -4,10 +4,10 @@ import Image from "next/image";
 import Link, { type LinkProps } from "next/link";
 import { toast, Toaster } from "sonner";
 import { bungee, quicksand, rubikMonoOne } from "~/styles/font";
-import { vote } from "../_action/action";
 import { useRouter } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
 import { useState } from "react";
+import { api } from "~/trpc/react";
 
 export default function Vote({
   searchParams: { prince, senator, page },
@@ -26,6 +26,22 @@ export default function Vote({
   const timeOut: ReturnType<typeof setTimeout>[] = [];
   const [loading, setLoading] = useState(false);
   const { data } = useSession();
+  const votePrince = api.vote.votePrince.useMutation({
+    onError: (error) => {
+      toast.error(error.message, {
+        duration: 2000,
+        position: "top-right",
+      });
+    },
+  });
+  const voteSenator = api.vote.voteSenator.useMutation({
+    onError: (error) => {
+      toast.error(error.message, {
+        duration: 2000,
+        position: "top-right",
+      });
+    },
+  });
 
   if (!data) {
     void router.push("/");
@@ -79,44 +95,30 @@ export default function Vote({
             </Title>
             <form
               className="flex flex-col items-center gap-6"
-              action={async () => {
+              onSubmit={(e) => {
+                e.preventDefault();
                 setLoading(true);
-                const res = await vote({
-                  prince: prince ?? "",
-                  senator: senator ?? "",
-                });
-
+                votePrince.mutate({ prince: prince! });
+                voteSenator.mutate({ senator: senator! });
                 setLoading(false);
 
-                if (res.prince.error && res.senator.error) {
-                  toast.error(`${res.prince.error} & ${res.senator.error}`, {
+                if (votePrince.isError && voteSenator.isError) {
+                  toast.error("Gagal memilih!", {
                     duration: 2000,
                     position: "top-right",
                   });
-
                   return;
                 }
 
-                if (res.prince.error) {
-                  toast.error(res.prince.error, {
-                    duration: 2000,
-                    position: "top-right",
-                  });
+                if (votePrince.isSuccess && voteSenator.isSuccess) {
+
+                  void router.push("/vote?page=4");
+
+                  const rTO = setTimeout(() => {
+                    void signOut();
+                  }, 3000);
+                  timeOut.push(rTO);
                 }
-
-                if (res.senator.error) {
-                  toast.error(res.senator.error, {
-                    duration: 2000,
-                    position: "top-right",
-                  });
-                }
-
-                void router.push("/vote?page=4");
-
-                const rTO = setTimeout(() => {
-                  void signOut();
-                }, 3000);
-                timeOut.push(rTO);
               }}
             >
               <div className="flex gap-20">

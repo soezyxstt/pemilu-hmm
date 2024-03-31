@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import type { Prince, Senator } from "@prisma/client";
+import { TRPCError } from '@trpc/server';
 
 export const voteRouter = createTRPCRouter({
   votePrince: protectedProcedure
@@ -29,9 +30,9 @@ export const voteRouter = createTRPCRouter({
         }
       });
 
-      if (user?.votePrince) return { error: "Anda sudah memilih Prince!" };
+      if (user?.votePrince) throw new TRPCError({ code: "BAD_REQUEST", message: "Anda sudah memilih Prince!" });
       
-      if (!user?.isInPrince) return { error: "Anda tidak terdaftar dalam pemilihan Prince!" }
+      if (!user?.isInPrince) throw new TRPCError({ code: "BAD_REQUEST", message: "Anda tidak terdaftar dalam pemilihan Prince!" });
 
       try {
         const vote = await db.votePrince.create({
@@ -45,14 +46,13 @@ export const voteRouter = createTRPCRouter({
           },
         });
 
-        if (!vote) return {error: "Gagal memilih!"};
+        if (!vote) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Gagal memilih!" });
 
         return {
-          error: null,
           ...vote,
         };
       } catch (error) {
-        return {error: "Gagal memilih!"};
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Gagal memilih!" });
       }
     }),
   
@@ -80,9 +80,9 @@ export const voteRouter = createTRPCRouter({
       }
     });
 
-    if (user?.voteSenator) return { error: "Anda sudah memilih Senator!" };
+    if (user?.voteSenator) throw new TRPCError({ code: "BAD_REQUEST", message: "Anda sudah memilih Senator!" });
     
-    if (!user?.isInSenator) return { error: "Anda tidak terdaftar dalam pemilihan Senator!" }
+    if (!user?.isInSenator) throw new TRPCError({ code: "BAD_REQUEST", message: "Anda tidak terdaftar dalam pemilihan Senator!" });
 
     try {
       const vote = await db.voteSenator.create({
@@ -96,14 +96,13 @@ export const voteRouter = createTRPCRouter({
         },
       });
 
-      if (!vote) return {error: "Gagal memilih Senator!"};
+      if (!vote) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Gagal memilih Senator!" });
 
       return {
-        error: null,
         ...vote,
       };
     } catch (error) {
-      return {error: "Gagal memilih Senator!"};
+      throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Gagal memilih Senator!" });
     }
   }),
 });
