@@ -3,10 +3,11 @@
 import { api } from '~/trpc/server';
 
 export const vote = async ({prince, senator}: { prince: string; senator: string }) => {
-  const res = await api.vote.vote({
-    prince: prince,
-    senator: senator,
-  });
+  const p = await api.vote.votePrince({ prince });
+  const s = await api.vote.voteSenator({ senator });
 
-  return res;
+  return {
+    prince: p,
+    senator: s,
+  }
 };

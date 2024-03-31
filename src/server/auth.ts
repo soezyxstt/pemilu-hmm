@@ -52,7 +52,6 @@ export const authOptions: NextAuthOptions = {
         id: token.id,
         role: token.role,
         nim: token.nim,
-        name: token.name,
       },
     }),
     jwt: ({ token, user }) => {
@@ -60,7 +59,6 @@ export const authOptions: NextAuthOptions = {
         token.id = user.id;
         token.role = user.role;
         token.nim = user.nim;
-        token.name = user.name;
       }
       return token;
     },
@@ -69,7 +67,6 @@ export const authOptions: NextAuthOptions = {
     CredentialsProvider({
       name: "Credentials",
       credentials: {
-        name: { label: "Name", type: "text" },
         nim: { label: "NIM", type: "number" },
       },
       async authorize(credentials, _req) {
@@ -82,7 +79,6 @@ export const authOptions: NextAuthOptions = {
 
         const user = await db.user.findFirst({
           where: {
-            name: credentials?.name.toLowerCase(),
             nim: credentials?.nim,
           },
         });
@@ -98,7 +94,6 @@ export const authOptions: NextAuthOptions = {
           id: user.id,
           role: user.role,
           nim: user.nim,
-          name: user.name,
         };
       },
     }),

@@ -88,12 +88,27 @@ export default function Vote({
 
                 setLoading(false);
 
-                if (res?.error) {
-                  toast.error(res.error, {
+                if (res.prince.error && res.senator.error) {
+                  toast.error(`${res.prince.error} & ${res.senator.error}`, {
                     duration: 2000,
                     position: "top-right",
                   });
+
                   return;
+                }
+
+                if (res.prince.error) {
+                  toast.error(res.prince.error, {
+                    duration: 2000,
+                    position: "top-right",
+                  });
+                }
+
+                if (res.senator.error) {
+                  toast.error(res.senator.error, {
+                    duration: 2000,
+                    position: "top-right",
+                  });
                 }
 
                 void router.push("/vote?page=4");

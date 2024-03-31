@@ -7,7 +7,6 @@ import { useState, type HTMLAttributes } from "react";
 import { Toaster, toast } from "sonner";
 
 export default function Home() {
-  const [uname, setUname] = useState("");
   const [nim, setNim] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -22,7 +21,6 @@ export default function Home() {
             e.preventDefault();
             setLoading(true);
             const res = await signIn("credentials", {
-              name: uname,
               nim: nim,
               callbackUrl: "/vote",
               redirect: false,
@@ -44,7 +42,6 @@ export default function Home() {
             }
 
             setLoading(false);
-            setUname("");
             setNim("");
           }}
         >
@@ -54,14 +51,6 @@ export default function Home() {
             width={200}
             height={200}
             className="mb-4"
-          />
-          <Input
-            placeholder="NAMA LENGKAP"
-            value={uname}
-            name='name'
-            onChange={(e) => {
-              setUname(e.currentTarget.value.toUpperCase());
-            }}
           />
           <Input
             placeholder="NIM"
