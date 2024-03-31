@@ -33,6 +33,18 @@ export default function Vote({
         position: "top-right",
       });
     },
+    onSuccess: () => {
+      void router.push("/vote?page=4");
+      timeOut[0] && clearTimeout(timeOut[0]);
+
+      const rTO = setTimeout(() => {
+        void signOut();
+      }, 3000);
+      timeOut.push(rTO);
+    },
+    onSettled: () => {
+      setLoading(false);
+    },
   });
   const voteSenator = api.vote.voteSenator.useMutation({
     onError: (error) => {
@@ -40,6 +52,18 @@ export default function Vote({
         duration: 2000,
         position: "top-right",
       });
+    },
+    onSuccess: () => {
+      void router.push("/vote?page=4");
+      timeOut[0] && clearTimeout(timeOut[0]);
+
+      const rTO = setTimeout(() => {
+        void signOut();
+      }, 3000);
+      timeOut.push(rTO);
+    },
+    onSettled: () => {
+      setLoading(false);
     },
   });
 
@@ -97,28 +121,10 @@ export default function Vote({
               className="flex flex-col items-center gap-6"
               onSubmit={(e) => {
                 e.preventDefault();
+
                 setLoading(true);
                 votePrince.mutate({ prince: prince! });
                 voteSenator.mutate({ senator: senator! });
-                setLoading(false);
-
-                if (votePrince.isError && voteSenator.isError) {
-                  toast.error("Gagal memilih!", {
-                    duration: 2000,
-                    position: "top-right",
-                  });
-                  return;
-                }
-
-                if (votePrince.isSuccess && voteSenator.isSuccess) {
-
-                  void router.push("/vote?page=4");
-
-                  const rTO = setTimeout(() => {
-                    void signOut();
-                  }, 3000);
-                  timeOut.push(rTO);
-                }
               }}
             >
               <div className="flex gap-20">
